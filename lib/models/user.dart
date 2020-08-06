@@ -1,4 +1,4 @@
-import 'package:FlutterGalleryApp/string_utils.dart';
+import 'package:FlutterGalleryApp/string_util.dart';
 
 enum LoginType { email, phone }
 
