@@ -20,7 +20,7 @@ class UserHolder {
       users[user.login] = user;
       return user;
     } else {
-      throw Exception('User with thigh name already exists');
+      throw Exception('A user with this email already exists');
     }
   }
 
