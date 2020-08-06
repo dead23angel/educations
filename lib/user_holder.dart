@@ -9,12 +9,12 @@ class UserHolder {
     if (!users.containsKey(user.login)) {
       users[user.login] = user;
     } else {
-      throw Exception('User with thigh name already exists');
+      throw Exception('A user with this email already exists');
     }
   }
 
-  User registerUserByEmail(String name, String email) {
-    User user = User(name: name, email: email);
+  User registerUserByEmail(String fullName, String email) {
+    User user = User(name: fullName, email: email);
 
     if (!users.containsKey(user.login)) {
       users[user.login] = user;
@@ -24,14 +24,14 @@ class UserHolder {
     }
   }
 
-  User registerUserByPhone(String name, String phone) {
-    User user = User(name: name, phone: phone);
+  User registerUserByPhone(String fullName, String phone) {
+    User user = User(name: fullName, phone: phone);
 
     if (!users.containsKey(user.login)) {
       users[user.login] = user;
       return user;
     } else {
-      throw Exception('User with thigh name already exists');
+      throw Exception('A user with this phone already exists');
     }
   }
 
@@ -49,7 +49,7 @@ class UserHolder {
     if (user.friends.contains(friend)) {
       return friend;
     } else {
-      throw Exception("${user.login} is not friend ot the login");
+      throw Exception("${user.login} is not a friend of the login");
     }
   }
 
