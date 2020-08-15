@@ -25,19 +25,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(CupertinoIcons.back, color: AppColors.grayChateau),
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (BuildContext context) => Feed()));
-          },
-        ),
-        title: Text('Photo', style: AppStyles.h1Black),
-        backgroundColor: Colors.white,
-        shadowColor: Colors.transparent,
-        centerTitle: true,
-      ),
+      appBar: _buildAppBar(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -102,6 +90,17 @@ class _FullScreenImageState extends State<FullScreenImage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return AppBar(
+      title: Text('Photo'),
+      leading: IconButton(
+          icon: const Icon(CupertinoIcons.back),
+          onPressed: () {
+            Navigator.pop(context);
+          }),
     );
   }
 
