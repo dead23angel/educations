@@ -1,18 +1,29 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import '../res/res.dart';
 import '../widgets/widgets.dart';
-import 'feed_screen.dart';
 
 class FullScreenImage extends StatefulWidget {
-  FullScreenImage(
-      {Key key, this.photo, this.name, this.userName, this.altDescription})
-      : super(key: key);
+  String photo;
+  String name;
+  String userName;
+  String altDescription;
+  String userPhoto;
+  String heroTag;
 
-  final String photo;
-  final String name;
-  final String userName;
-  final String altDescription;
+  FullScreenImage(
+      {Key key, photo, name, userName, userPhoto, heroTag, altDescription})
+      : super(key: key) {
+    this.heroTag = heroTag;
+    this.userName = userName ?? 'CWTeam';
+    this.name = name ?? 'Ivan Gorokhov';
+    this.altDescription = altDescription ?? 'Coming Soon...';
+    this.photo = photo ??
+        'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png';
+    this.userPhoto = userPhoto ??
+        'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png';
+  }
 
   @override
   State createState() {
@@ -20,106 +31,149 @@ class FullScreenImage extends StatefulWidget {
   }
 }
 
-class _FullScreenImageState extends State<FullScreenImage> {
+class _FullScreenImageState extends State<FullScreenImage>
+    with TickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 1500), vsync: this);
+    _playAnimation();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playAnimation() async {
+    try {
+      await _controller.forward().orCancel;
+    } on TickerCanceled {}
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Photo(photoLink: widget.photo ?? kFlutterDash),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: Text(
-              widget.altDescription ?? 'This is Flutter dash. I love him <3',
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: AppStyles.h3.copyWith(color: AppColors.manatee),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Photo'),
+          leading: IconButton(
+            icon: Icon(CupertinoIcons.back),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Hero(
+              tag: widget.heroTag,
+              child: Photo(photoLink: widget.photo),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: _buildPhotoMeta(),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                LikeButton(likeCount: 23, isLiked: true),
-                ButtonBar(
-                  children: <Widget>[
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(7)),
-                          color: AppColors.dodgerBlue,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          child: Text('Save',
-                              style: AppStyles.h4
-                                  .copyWith(color: AppColors.white)),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Text(
+                widget.altDescription,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: AppStyles.h3,
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (BuildContext context, Widget child) {
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  child: Row(
+                    children: <Widget>[
+                      Opacity(
+                        opacity: buildAnimationUserAvatar(),
+                        child: UserAvatar(
+                            'https://skill-branch.ru/img/speakers/Adechenko.jpg'),
+                      ),
+                      SizedBox(width: 6.0),
+                      Opacity(
+                        opacity: buildAnimationUserMeta(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(widget.name, style: AppStyles.h1Black),
+                            Text(
+                              '@' + widget.userName,
+                              style: AppStyles.h5Black
+                                  .copyWith(color: AppColors.manatee),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(7)),
-                          color: AppColors.dodgerBlue,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 30, vertical: 10),
-                          child: Text('Visit',
-                              style: AppStyles.h4
-                                  .copyWith(color: AppColors.white)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                );
+              },
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  LikeButton(likeCount: 10, isLiked: true),
+                  Row(
+                    children: <Widget>[
+                      _buildButton(txt: 'Save'),
+                      SizedBox(width: 10),
+                      _buildButton(txt: 'Visit'),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    return AppBar(
-      title: Text('Photo'),
-      leading: IconButton(
-          icon: const Icon(CupertinoIcons.back),
-          onPressed: () {
-            Navigator.pop(context);
-          }),
-    );
+  double buildAnimationUserMeta() {
+    return Tween<double>(begin: 0.0, end: 1.0)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Interval(0.5, 1.0, curve: Curves.ease),
+          ),
+        )
+        .value;
   }
 
-  Widget _buildPhotoMeta() {
-    return Row(
-      children: <Widget>[
-        UserAvatar(
-            'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png'),
-        SizedBox(width: 6),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text(widget.name ?? 'Ivan Gorokhov', style: AppStyles.h1Black),
-            Text(widget.userName != null ? '@' + widget.userName : 'CWTeam',
-                style: AppStyles.h5Black.copyWith(color: AppColors.manatee)),
-          ],
+  double buildAnimationUserAvatar() {
+    return Tween<double>(begin: 0.0, end: 1.0)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Interval(0.0, 0.5, curve: Curves.ease),
+          ),
+        )
+        .value;
+  }
+
+  Widget _buildButton({String txt = 'Button'}) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.dodgerBlue,
+          borderRadius: BorderRadius.circular(8.0),
         ),
-      ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
+          child: Text(txt, style: TextStyle(color: Colors.white, fontSize: 18)),
+        ),
+      ),
     );
   }
 }
