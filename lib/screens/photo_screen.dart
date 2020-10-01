@@ -1,34 +1,53 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 
 import '../res/res.dart';
 import '../widgets/widgets.dart';
 
-class FullScreenImage extends StatefulWidget {
-  String photo;
-  String name;
-  String userName;
-  String altDescription;
-  String userPhoto;
-  String heroTag;
+class FullScreenImageArguments {
+  FullScreenImageArguments({
+    this.altDescription,
+    this.userName,
+    this.name,
+    this.userPhoto,
+    this.photo,
+    this.heroTag,
+    this.key,
+    this.routeSettings,
+  });
 
-  FullScreenImage(
-      {Key key, photo, name, userName, userPhoto, heroTag, altDescription})
-      : super(key: key) {
-    this.heroTag = heroTag ?? '';
-    this.userName = userName ?? 'CWTeam';
-    this.name = name ?? 'Ivan Gorokhov';
-    this.altDescription = altDescription ?? 'Coming Soon...';
-    this.photo = photo ??
-        'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png';
-    this.userPhoto = userPhoto ??
-        'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png';
-  }
+  final String altDescription;
+  final String userName;
+  final String name;
+  final String userPhoto;
+  final String photo;
+  final String heroTag;
+  final Key key;
+  final RouteSettings routeSettings;
+}
+
+class FullScreenImage extends StatefulWidget {
+  FullScreenImage({
+    Key key,
+    this.altDescription,
+    this.userName,
+    this.name,
+    this.userPhoto,
+    this.photo,
+    this.heroTag,
+  }) : super(key: key);
+
+  final String altDescription;
+  final String userName;
+  final String name;
+  final String userPhoto;
+  final String photo;
+  final String heroTag;
 
   @override
-  State createState() {
-    return _FullScreenImageState();
-  }
+  _FullScreenImageState createState() => _FullScreenImageState();
 }
 
 class _FullScreenImageState extends State<FullScreenImage>
@@ -38,6 +57,7 @@ class _FullScreenImageState extends State<FullScreenImage>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
         duration: const Duration(milliseconds: 1500), vsync: this);
     _playAnimation();
@@ -60,11 +80,17 @@ class _FullScreenImageState extends State<FullScreenImage>
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Photo'),
+          title: Text(
+            'Photo',
+            style: Theme.of(context).textTheme.headline2,
+          ),
           leading: IconButton(
             icon: Icon(CupertinoIcons.back),
             onPressed: () => Navigator.pop(context),
           ),
+          actions: <Widget>[
+            _buildVerticalButton(context),
+          ],
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -80,43 +106,11 @@ class _FullScreenImageState extends State<FullScreenImage>
                 widget.altDescription,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: AppStyles.h3,
+                style: Theme.of(context).textTheme.headline3,
               ),
             ),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (BuildContext context, Widget child) {
-                return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: Row(
-                    children: <Widget>[
-                      Opacity(
-                        opacity: buildAnimationUserAvatar(),
-                        child: UserAvatar(
-                            'https://skill-branch.ru/img/speakers/Adechenko.jpg'),
-                      ),
-                      SizedBox(width: 6.0),
-                      Opacity(
-                        opacity: buildAnimationUserMeta(),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(widget.name, style: AppStyles.h1Black),
-                            Text(
-                              '@' + widget.userName,
-                              style: AppStyles.h5Black
-                                  .copyWith(color: AppColors.manatee),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+            _animatedBuilder(_controller, buildAnimationUserMeta,
+                buildAnimationUserAvatar, widget),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: Row(
@@ -125,14 +119,14 @@ class _FullScreenImageState extends State<FullScreenImage>
                   LikeButton(likeCount: 10, isLiked: true),
                   Row(
                     children: <Widget>[
-                      _buildButton(txt: 'Save'),
+                      _buildSaveButton(context, widget),
                       SizedBox(width: 10),
-                      _buildButton(txt: 'Visit'),
+                      _buildVisitButton(context, widget),
                     ],
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -155,25 +149,164 @@ class _FullScreenImageState extends State<FullScreenImage>
         .animate(
           CurvedAnimation(
             parent: _controller,
-            curve: Interval(0.0, 0.5, curve: Curves.ease),
+            curve: Interval(0.5, 1.0, curve: Curves.ease),
           ),
         )
         .value;
   }
 
-  Widget _buildButton({String txt = 'Button'}) {
+  Widget _buildVisitButton(context, widget) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        _onVisitButtonTap(context);
+      },
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.dodgerBlue,
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(7.0),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
-          child: Text(txt, style: TextStyle(color: Colors.white, fontSize: 18)),
+          child: Text(
+            'Visit',
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
         ),
       ),
     );
   }
+}
+
+Widget _buildVerticalButton(context) {
+  return IconButton(
+    icon: Icon(Icons.more_vert),
+    onPressed: () {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => Container(
+          child: ClaimBottomSheet(),
+        ),
+      );
+    },
+  );
+}
+
+Widget _animatedBuilder(
+    _controller, buildAnimationUserMeta, buildAnimationUserAvatar, widget) {
+  return AnimatedBuilder(
+    animation: _controller,
+    builder: (BuildContext context, Widget child) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Row(
+          children: <Widget>[
+            Opacity(
+              opacity: 1.0, //buildAnimationUserMeta(),
+              child: UserAvatar(
+                  'https://pbs.twimg.com/profile_images/1127952848539541504/tu-9u8XA.png'),
+            ),
+            SizedBox(width: 6.0),
+            Opacity(
+              opacity: buildAnimationUserMeta(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(widget.name,
+                      style: Theme.of(context).textTheme.headline1),
+                  Text(
+                    '@' + widget.userName,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline5
+                        .copyWith(color: AppColors.manatee),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildSaveButton(context, widget) {
+  return GestureDetector(
+    onTap: () {
+      _showDialog(context, widget);
+    },
+    child: Container(
+      decoration: BoxDecoration(
+        color: AppColors.dodgerBlue,
+        borderRadius: BorderRadius.circular(7.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 10.0),
+        child: Text(
+          'Save',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    ),
+  );
+}
+
+void _showDialog(context, widget) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Downloading photos'),
+      content: Text('Are you sure you want to upload a photo?'),
+      actions: <Widget>[
+        FlatButton(
+          onPressed: () {
+            GallerySaver.saveImage(widget.photo);
+            Navigator.of(context).pop();
+          },
+          child: Text('Download'),
+        ),
+        FlatButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Close'),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _onVisitButtonTap(context) async {
+  OverlayState overlayState = Overlay.of(context);
+
+  OverlayEntry overlayEntry = OverlayEntry(
+    builder: (BuildContext context) {
+      return Positioned(
+        top: MediaQuery.of(context).viewInsets.top + 50,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            alignment: Alignment.center,
+            width: MediaQuery.of(context).size.width,
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 20),
+              padding: EdgeInsets.fromLTRB(16, 10, 16, 10),
+              decoration: BoxDecoration(
+                color: AppColors.mercury,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text('No link :)'),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  overlayState.insert(overlayEntry);
+  await Future.delayed(
+    Duration(seconds: 1),
+  );
+  overlayEntry.remove();
 }

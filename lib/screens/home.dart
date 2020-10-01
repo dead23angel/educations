@@ -1,17 +1,23 @@
+import 'dart:async';
+
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 
+import '../app.dart';
 import '../res/res.dart';
 import 'feed_screen.dart';
 
 class Home extends StatefulWidget {
+  Home(this.onConnectivityChanged);
+  final Stream<ConnectivityResult> onConnectivityChanged;
+
   @override
-  State<StatefulWidget> createState() {
-    return _HomeState();
-  }
+  State<StatefulWidget> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
-  int currentTab = 0;
+class _HomeState extends State<Home> with TickerProviderStateMixin {
+  StreamSubscription subscription;
+  int _currentTab = 0;
 
   List<Widget> pages = [
     Feed(),
@@ -20,17 +26,67 @@ class _HomeState extends State<Home> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    subscription =
+        widget.onConnectivityChanged.listen((ConnectivityResult result) {
+      switch (result) {
+        case ConnectivityResult.wifi:
+          ConnectivityOverlay().removeOverlay(context);
+          break;
+        case ConnectivityResult.mobile:
+          ConnectivityOverlay().removeOverlay(context);
+          break;
+        case ConnectivityResult.none:
+          ConnectivityOverlay().showOverlay(
+            context,
+            Positioned(
+              top: MediaQuery.of(context).viewInsets.top + 50,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  alignment: Alignment.center,
+                  width: MediaQuery.of(context).size.width,
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.fromLTRB(16, 10, 16, 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.mercury,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('No internet connection'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          break;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    subscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavyBar(
         itemCornerRadius: 8,
         curve: Curves.ease,
-        onItemSelected: (int index) {
-          setState(() {
-            currentTab = index;
-          });
+        onItemSelected: (int index) async {
+          if (index != 1) {
+            setState(
+              () {
+                _currentTab = index;
+              },
+            );
+          }
         },
-        currentTab: currentTab,
+        currentTab: _currentTab,
         items: [
           BottomNavyBarItem(
               asset: AppIcons.home,
@@ -49,7 +105,7 @@ class _HomeState extends State<Home> {
               inactiveColor: AppColors.manatee),
         ],
       ),
-      body: pages[currentTab],
+      body: pages[_currentTab],
     );
   }
 }
@@ -83,35 +139,41 @@ class BottomNavyBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: backgroundColor, boxShadow: [
-        if (showElevation)
-          const BoxShadow(color: Colors.black12, blurRadius: 2),
-      ]),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        boxShadow: [
+          if (showElevation)
+            const BoxShadow(color: Colors.black12, blurRadius: 2),
+        ],
+      ),
       child: SafeArea(
-          child: Container(
-        width: double.infinity,
-        height: containerHeight,
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        child: Row(
-          mainAxisAlignment: mainAxisAlignment,
-          children: items.map((item) {
-            var index = items.indexOf(item);
+        child: Container(
+          width: double.infinity,
+          height: containerHeight,
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: mainAxisAlignment,
+            children: items.map(
+              (item) {
+                var index = items.indexOf(item);
 
-            return GestureDetector(
-              onTap: () {
-                onItemSelected(index);
+                return GestureDetector(
+                  onTap: () {
+                    onItemSelected(index);
+                  },
+                  child: _ItemWidget(
+                      curve: curve,
+                      animationDuration: animationDuration,
+                      backgroundColor: backgroundColor,
+                      isSelected: currentTab == index,
+                      item: item,
+                      itemCornerRadius: itemCornerRadius),
+                );
               },
-              child: _ItemWidget(
-                  curve: curve,
-                  animationDuration: animationDuration,
-                  backgroundColor: backgroundColor,
-                  isSelected: currentTab == index,
-                  item: item,
-                  itemCornerRadius: itemCornerRadius),
-            );
-          }).toList(),
+            ).toList(),
+          ),
         ),
-      )),
+      ),
     );
   }
 }
@@ -158,15 +220,16 @@ class _ItemWidget extends StatelessWidget {
           SizedBox(width: 4),
           Expanded(
             child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: DefaultTextStyle.merge(
-                    child: item.title,
-                    textAlign: item.textAlign,
-                    maxLines: 1,
-                    style: TextStyle(
-                        color:
-                            isSelected ? item.activeColor : item.inactiveColor,
-                        fontWeight: FontWeight.bold))),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: DefaultTextStyle.merge(
+                child: item.title,
+                textAlign: item.textAlign,
+                maxLines: 1,
+                style: TextStyle(
+                    color: isSelected ? item.activeColor : item.inactiveColor,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
         ],
       ),
