@@ -15,7 +15,7 @@ class FullScreenImage extends StatefulWidget {
   FullScreenImage(
       {Key key, photo, name, userName, userPhoto, heroTag, altDescription})
       : super(key: key) {
-    this.heroTag = heroTag;
+    this.heroTag = heroTag ?? '';
     this.userName = userName ?? 'CWTeam';
     this.name = name ?? 'Ivan Gorokhov';
     this.altDescription = altDescription ?? 'Coming Soon...';
